@@ -2,24 +2,16 @@
 
 
 //
-Category::Category(string pName, string pDescription) : name(pName), description(pDescription) {}
+Product::Product(string pName, string pDescription, int pProductID, int pPrice, int pQuantity):
+ name(pName), description(pDescription), productID(pProductID), price(pPrice), quantity(pQuantity) {}
 
-string Category::getName(){
+string Product::getName(){
     return name;
 }
 
-string Category::getDescription(){
+string Product::getDescription(){
     return description;
 }
-
-Category::~Category(){}
-//
-
-
-
-//
-Product::Product(string pName, string pDescription, int pProductID, int pPrice, int pQuantity):
- Category(pName, pDescription), productID(pProductID), price(pPrice), quantity(pQuantity) {}
 
 int Product::getProductID(){
     return productID;
@@ -39,6 +31,14 @@ Product& Product::operator--(){
 }
 
 Product::~Product(){}
+//
+
+
+
+//
+Person::Person(string uName): username(uName) {}
+
+Person::~Person(){}
 //
 
 
@@ -87,7 +87,7 @@ Cart::~Cart(){
 
 
 //
-User::User(string uName): username(uName) {userID++;}
+User::User(string uName): Person(uName) {userID++;}
 
 void User::checkout(){
     fstream file;
@@ -106,6 +106,7 @@ User::~User(){}
 
 //
 Catalog::Catalog(){}
+
 void Catalog::Save(){
     fstream file;
     file.open("Catalog.txt", ios::out);
@@ -124,21 +125,36 @@ void Catalog::Save(){
         }
     }
 }
+
+Catalog& Catalog::operator+=(string C){
+    category.push_back(C);
+}
+
 Catalog& Catalog::operator+=(Product& P){
     product.push_back(&P);
 }
+
 Catalog::~Catalog(){
     for (int i = 0; i < product.size(); i++){
         delete[] product[i];
     }
 }
-
 //
 
 
 
+//
+Manager::Manager(string uName): Person(uName) {managerID++;}
+
+Manager::~Manager() {}
+//
+
+
+
+//
 OnlineShop::OnlineShop(){}
-OnlineShop OnlineShop::getInstance(){
+
+OnlineShop& OnlineShop::getInstance(){
     if (shopPtr == nullptr){
         shopPtr = new OnlineShop();
     }
@@ -147,3 +163,23 @@ OnlineShop OnlineShop::getInstance(){
     }
 }
 
+void OnlineShop::addCategory(string C){
+    catalog += C;
+}
+
+void OnlineShop::addProduct(Product& P){
+    catalog += P;
+}
+
+OnlineShop::~OnlineShop(){
+    for (int i = 0; i < user.size(); i++){
+        delete[] user[i];
+    }
+
+    for (int i = 0; i < manager.size(); i++){
+        delete[] manager[i];
+    }
+
+    delete shopPtr;
+}
+//

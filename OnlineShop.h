@@ -5,45 +5,39 @@
 using namespace std;
 
 
-// [Restriction]
-// Because of an annoying restriction present in the project description
-// I was forced to create a useless class named "Category", which provides
-// inheritance to "Product". Otherwise product would have existed alone
-// [/Restriction]
 
 
-// Pretty much useless class
-class Category{
+// General Class, Used by: [Cart, Catalog]
+class Product{
 private:
     string name;
     string description;
-public:
-    Category(string pName, string pDescription);
-    string getName();
-    string getDescription();
-    virtual void display();
-    virtual ~Category();
-};
-
-
-// Stores detail on each Product
-class Product: public Category{
-private:
     int productID;
     int price;
     int quantity;
 public:
     Product(string pName, string pDescription, int pProductID, int pPrice, int pQuantity);
+    string getName();
+    string getDescription();
     int getProductID();
     int getPrice();
     int getQuantity();
     Product& operator--();
-    void display() override;
-    ~Product() override;
+    ~Product();
 };
 
 
-// Stores all the product that were added to the cart
+// General Class, Children: [User, Manager]
+class Person{
+private:
+    string username;
+public:
+    Person(string uName);
+    virtual ~Person();
+};
+
+
+// Cart
 class Cart{
 private:
     vector<int> productQuantity;
@@ -57,17 +51,17 @@ public:
 
 
 // User
-class User{
+class User: public Person{
 private:
     static int userID;
-    string username;
     Cart cart;
 public:
     User(string uName);
     void checkout();
-    ~User();
+    ~User() override;
 };
 int User::userID = 0;
+
 
 
 // Catalog
@@ -78,34 +72,38 @@ private:
 public:
     Catalog();
     void Save();
+    Catalog& operator+=(string C);
     Catalog& operator+=(Product& P);
     ~Catalog();
 };
 
 
-class Manager{
+// Manager
+class Manager: public Person{
 private:
-
+    static int managerID;
 public:
+    Manager(string uName);
+    ~Manager() override;
 };
+int Manager::managerID = 0;
+
 
 
 // Singleton Class
 class OnlineShop{
 private:
-    OnlineShop();
-
-    Catalog catalog();
-    Cart cart();
-    Order order();
+    Catalog catalog;
+    vector<User*> user;
+    vector<Manager*> manager;
 
     static OnlineShop* shopPtr;
+
+    OnlineShop();
 public:
-    static OnlineShop getInstance();
+    static OnlineShop& getInstance();
+    void addCategory(string C);
+    void addProduct(Product& P);
     void run();
-};
-
-
-class Order{
-
+    ~OnlineShop();
 };
