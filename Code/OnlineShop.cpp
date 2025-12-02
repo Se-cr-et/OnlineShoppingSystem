@@ -77,17 +77,27 @@ void Cart::checkout_helper(fstream& _file){
     _file << sum;
 }
 
-Cart::~Cart(){
-    for (int i = 0; i < product.size(); i++){
-        delete[] product[i];
-    }
+Cart::~Cart(){}
+//
+
+
+
+//
+int User::userCount = 0;
+
+User::User(string uName): Person(uName) {
+    userCount++;
+    userID = userCount;
 }
-//
 
 
+void User::display() {
+    cout << "               " << username << endl;
+}
 
-//
-User::User(string uName): Person(uName) {userID++;}
+int User::getUserID(){
+    return userID;
+}
 
 void User::checkout(){
     fstream file;
@@ -128,15 +138,17 @@ void Catalog::Save(){
 
 Catalog& Catalog::operator+=(string C){
     category.push_back(C);
+    return *this;
 }
 
 Catalog& Catalog::operator+=(Product& P){
     product.push_back(&P);
+    return *this;
 }
 
 Catalog::~Catalog(){
     for (int i = 0; i < product.size(); i++){
-        delete[] product[i];
+        delete product[i];
     }
 }
 //
@@ -144,9 +156,22 @@ Catalog::~Catalog(){
 
 
 //
-Manager::Manager(string uName): Person(uName) {managerID++;}
+Manager::Manager(string uName): Person(uName) {
+    managerCount++;
+    managerID = managerCount;
+}
+
+void Manager::display(){
+    cout << "              " << username << endl;
+}
+
+int Manager::getManagerID(){
+    return managerID;
+}
 
 Manager::~Manager() {}
+
+int Manager::managerCount = 0;
 //
 
 
@@ -154,13 +179,14 @@ Manager::~Manager() {}
 //
 OnlineShop::OnlineShop(){}
 
-OnlineShop& OnlineShop::getInstance(){
+OnlineShop* OnlineShop::getInstance(){
     if (shopPtr == nullptr){
         shopPtr = new OnlineShop();
     }
     else{
         cout << "[SYSTEM ALREADY RUNNING]\n\n";
     }
+    return shopPtr;
 }
 
 void OnlineShop::addCategory(string C){
@@ -171,15 +197,43 @@ void OnlineShop::addProduct(Product& P){
     catalog += P;
 }
 
+void OnlineShop::addUser(User* U){
+    user.push_back(U);
+}
+
+void OnlineShop::addManager(Manager* M){
+    manager.push_back(M);
+}
+
+void OnlineShop::displayUsers(){
+    cout << "<-------------[USERS]-------------->" << endl;
+    for (int i = 0; i < user.size(); i++){
+        cout << "            ----ID" + to_string(user[i]->getUserID()) + "----" << endl;
+        user[i]->display();
+        cout << "            -----------" << endl;
+    }
+    cout << endl;
+}
+
+void OnlineShop::displayManager(){
+    cout << "<-------------[MANAGERS]-------------->" << endl;
+    for (int i = 0; i < manager.size(); i++){
+        cout << "            ----ID" + to_string(manager[i]->getManagerID()) + "----" << endl;
+        manager[i]->display();
+        cout << "            -----------" << endl;
+    }
+    cout << endl;
+}
+
 OnlineShop::~OnlineShop(){
     for (int i = 0; i < user.size(); i++){
-        delete[] user[i];
+        delete user[i];
     }
 
     for (int i = 0; i < manager.size(); i++){
-        delete[] manager[i];
+        delete manager[i];
     }
-
-    delete shopPtr;
 }
+
+OnlineShop* OnlineShop::shopPtr = nullptr;
 //

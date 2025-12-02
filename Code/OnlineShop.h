@@ -29,10 +29,11 @@ public:
 
 // General Class, Children: [User, Manager]
 class Person{
-private:
+protected:
     string username;
 public:
     Person(string uName);
+    virtual void display() = 0;
     virtual ~Person();
 };
 
@@ -53,14 +54,16 @@ public:
 // User
 class User: public Person{
 private:
-    static int userID;
+    static int userCount;
+    int userID;
     Cart cart;
 public:
     User(string uName);
+    void display() override;
+    int getUserID();
     void checkout();
     ~User() override;
 };
-int User::userID = 0;
 
 
 
@@ -81,12 +84,14 @@ public:
 // Manager
 class Manager: public Person{
 private:
-    static int managerID;
+    static int managerCount;
+    int managerID;
 public:
     Manager(string uName);
+    void display() override;
+    int getManagerID();
     ~Manager() override;
 };
-int Manager::managerID = 0;
 
 
 
@@ -101,9 +106,13 @@ private:
 
     OnlineShop();
 public:
-    static OnlineShop& getInstance();
+    static OnlineShop* getInstance();
     void addCategory(string C);
     void addProduct(Product& P);
+    void addUser(User* U);
+    void addManager(Manager* M);
+    void displayUsers();
+    void displayManager();
     void run();
     ~OnlineShop();
 };
