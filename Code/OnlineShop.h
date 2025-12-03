@@ -5,20 +5,19 @@
 #include <fstream>
 using namespace std;
 
+class Catalog; 
 
 // General Class, Used by: [Cart, Catalog]
 class Product{
 private:
     string name;
-    string description;
     string category;
     int productID;
     int price;
     int quantity;
 public:
-    Product(string pName, string pDescription, int pProductID, int pPrice, int pQuantity);
+    Product(int pProductID, string pName, int pPrice, int pQuantity);
     string getName();
-    string getDescription();
     string getCategory();
     int getProductID();
     int getPrice();
@@ -47,9 +46,10 @@ private:
 public:
     Cart();
     Cart& addProduct(Product& P, int pQuantity);
-    Product& searchProduct(int _prodID);
+    void removeProduct(Product& P, int _prodID);
+    Product* searchProduct(int _prodID);
     void loggingCart(fstream& _file);
-    void reloggingCart(fstream& _file);
+    void reloggingCart(fstream& _file, Catalog& Catalog);
     void checkout_helper(fstream& _file);
     ~Cart();
 };
@@ -66,8 +66,10 @@ public:
     void display() override;
     int getUserID();
     string getUsername();
+    void addProduct(Product& P, int pQuantity);
+    void removeProduct(Product& P, int prodID);
     void loggingUser(fstream& _file);
-    void reloggingUser(fstream& _file);
+    void reloggingUser(fstream& _file, Catalog& Catalog, int ID);
     void storeCart();
     void checkout();
     ~User() override;
@@ -83,6 +85,7 @@ private:
 public:
     Catalog();
     void loggingCatalog(fstream& _file);
+    Product* searchProduct(int proID);
     void reloggingCatalog(fstream& _file);
     void categoryDisplay();
     void normalDisplay();
@@ -102,6 +105,7 @@ private:
 public:
     Manager(string uName);
     void loggingManager(fstream& _file);
+    void reloggingManager(fstream& _file, int ID);
     void display() override;
     int getManagerID();
     ~Manager() override;
@@ -125,8 +129,6 @@ public:
     void addProduct(Product& P);
     void addUser(User* U);
     void addManager(Manager* M);
-    void displayUsers();
-    void displayManager();
     void RunSystem();
     void CloseSystem();
     ~OnlineShop();
