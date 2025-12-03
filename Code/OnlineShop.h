@@ -1,10 +1,9 @@
 #pragma once
 #include <iostream>
+#include <string>
 #include <vector>
 #include <fstream>
 using namespace std;
-
-
 
 
 // General Class, Used by: [Cart, Catalog]
@@ -12,6 +11,7 @@ class Product{
 private:
     string name;
     string description;
+    string category;
     int productID;
     int price;
     int quantity;
@@ -19,6 +19,7 @@ public:
     Product(string pName, string pDescription, int pProductID, int pPrice, int pQuantity);
     string getName();
     string getDescription();
+    string getCategory();
     int getProductID();
     int getPrice();
     int getQuantity();
@@ -45,8 +46,11 @@ private:
     vector<Product*> product;
 public:
     Cart();
-    Cart& addProduct(Product& P, int pPrice);
-    void checkout_helper(fstream& file);
+    Cart& addProduct(Product& P, int pQuantity);
+    Product& searchProduct(int _prodID);
+    void loggingCart(fstream& _file);
+    void reloggingCart(fstream& _file);
+    void checkout_helper(fstream& _file);
     ~Cart();
 };
 
@@ -61,6 +65,10 @@ public:
     User(string uName);
     void display() override;
     int getUserID();
+    string getUsername();
+    void loggingUser(fstream& _file);
+    void reloggingUser(fstream& _file);
+    void storeCart();
     void checkout();
     ~User() override;
 };
@@ -74,6 +82,11 @@ private:
     vector<Product*> product;
 public:
     Catalog();
+    void loggingCatalog(fstream& _file);
+    void reloggingCatalog(fstream& _file);
+    void categoryDisplay();
+    void normalDisplay();
+    void searchDisplay(string Categor);
     void Save();
     Catalog& operator+=(string C);
     Catalog& operator+=(Product& P);
@@ -88,6 +101,7 @@ private:
     int managerID;
 public:
     Manager(string uName);
+    void loggingManager(fstream& _file);
     void display() override;
     int getManagerID();
     ~Manager() override;
@@ -113,6 +127,7 @@ public:
     void addManager(Manager* M);
     void displayUsers();
     void displayManager();
-    void run();
+    void RunSystem();
+    void CloseSystem();
     ~OnlineShop();
 };

@@ -9,5 +9,7 @@ int main(){
     shop->addManager(new Manager("Sheikh"));
     shop->displayUsers();
     shop->displayManager();
+    shop->CloseSystem();
 
+    return 0;
 }
