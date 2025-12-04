@@ -2,8 +2,11 @@
 using std::string;
 
 //
-Product::Product(int pProductID, string pName, int pPrice, int pQuantity):
- productID(pProductID), name(pName), price(pPrice), quantity(pQuantity) {}
+Product::Product(string pName, string pCategory, int pPrice, int pQuantity):
+name(pName), category(pCategory), price(pPrice), quantity(pQuantity) {
+    productCount++;
+    productID = productCount;
+}
 
 string Product::getName(){
     return name;
@@ -31,12 +34,22 @@ Product& Product::operator--(){
 }
 
 Product::~Product(){}
+
+int Product::productCount = 0;
 //
 
 
 
 //
-Person::Person(string uName): username(uName) {}
+Person::Person(string uName, string uPassword): username(uName), password(uPassword) {}
+
+string Person::getUsername(){
+    return username;
+}
+
+string Person::getPassword(){
+    return password;
+}
 
 Person::~Person(){}
 //
@@ -135,7 +148,7 @@ Cart::~Cart(){}
 //
 int User::userCount = 0;
 
-User::User(string uName): Person(uName) {
+User::User(string uName, string uPassword): Person(uName, uPassword) {
     userCount++;
     userID = userCount;
 }
@@ -149,10 +162,6 @@ int User::getUserID(){
     return userID;
 }
 
-string User::getUsername(){
-    return username;
-}
-
 void User::addProduct(Product& P, int pQuantity){
     cart.addProduct(P, pQuantity);
 }
@@ -162,14 +171,13 @@ void User::removeProduct(Product& P, int prodID){
 }
 
 void User::loggingUser(fstream& _file){
-    _file << userID << " ";
     _file << username << " ";
+    _file << password << " ";
     _file << "\n";
     cart.loggingCart(_file);
 }
 
-void User::reloggingUser(fstream& _file, Catalog& Catalog, int ID){
-    userID = ID;
+void User::reloggingUser(fstream& _file, Catalog& Catalog){
     cart.reloggingCart(_file, Catalog);
 }
 
@@ -202,8 +210,8 @@ void Catalog::loggingCatalog(fstream& _file){
     // Logging Product
     _file << product.size() << "\n";
     for (int i = 0; i < product.size(); i++){
-        _file << product[i]->getProductID() << " ";
         _file << product[i]->getName() << " ";
+        _file << product[i]->getCategory() << " ";
         _file << product[i]->getPrice() << " ";
         _file << product[i]->getQuantity() << " ";
         _file << "\n";
@@ -223,14 +231,14 @@ void Catalog::reloggingCatalog(fstream& _file){
     int productSize;
     _file >> productSize;
 
-    int prodID, prodPrice, prodQuantity;
-    string prodName;
+    int prodPrice, prodQuantity;
+    string prodName, prodCategory;
     for (int i = 0; i < productSize; i++){
-        _file >> prodID;
         _file >> prodName;
+        _file >> prodCategory;
         _file >> prodPrice;
         _file >> prodQuantity;
-        product.push_back(new Product(prodID,prodName,prodPrice,prodQuantity));
+        product.push_back(new Product(prodName, prodCategory, prodPrice, prodQuantity));
     }
 }
 
@@ -243,6 +251,15 @@ Product* Catalog::searchProduct(int proID){
     return nullptr;
 }
 
+int Catalog::searchProductIndex(int proID){
+    for (int i = 0; i < product.size(); i++){
+        if (product[i]->getProductID() == proID){
+            return i;
+        }
+    }
+    return -1;
+}
+
 void Catalog::categoryDisplay(){
     cout << "Category: ";
     for (int i = 0; i < category.size(); i++){
@@ -251,7 +268,7 @@ void Catalog::categoryDisplay(){
     cout << endl;
 }
 
-void Catalog::normalDisplay(){
+void Catalog::unfilteredDisplay(){
     cout << "Products: " << endl;
     for (int i = 0; i < product.size(); i++){
         cout << product[i]->getProductID() << ". ";
@@ -263,7 +280,7 @@ void Catalog::normalDisplay(){
     cout << endl << endl;
 }
 
-void Catalog::searchDisplay(string categor){
+void Catalog::filteredDisplay(string categor){
     for (int i = 0; i < product.size(); i++){
         if (product[i]->getCategory() == categor){
             cout << product[i]->getProductID() << ". ";
@@ -285,6 +302,19 @@ Catalog& Catalog::operator+=(Product& P){
     return *this;
 }
 
+Catalog& Catalog::operator-=(string C){
+    for (int i = 0; i < category.size(); i++){
+        if (category[i] == C){
+            category.erase(category.begin() + i);
+        }
+    }
+    return *this;
+}
+Catalog& Catalog::operator-=(int _prodID){
+    product.erase(product.begin() + this->searchProductIndex(_prodID));
+    return *this;
+}
+
 Catalog::~Catalog(){
     for (int i = 0; i < product.size(); i++){
         delete product[i];
@@ -295,7 +325,7 @@ Catalog::~Catalog(){
 
 
 //
-Manager::Manager(string uName): Person(uName) {
+Manager::Manager(string uName, string uPassword): Person(uName, uPassword) {
     managerCount++;
     managerID = managerCount;
 }
@@ -310,8 +340,8 @@ void Manager::loggingManager(fstream& _file){
     _file << "\n";
 }
 
-void Manager::reloggingManager(fstream& _file, int ID){
-    managerID = ID;
+void Manager::reloggingManager(fstream& _file){
+    return;
 }
 
 int Manager::getManagerID(){
@@ -370,13 +400,13 @@ void OnlineShop::RunSystem(){
         int userSize;
         file2 >> userSize;
         for (int i = 0; i < userSize; i++){
-            int tempID;
             string username;
-            file2 >> tempID;  
+            string password;
             file2 >> username;
+            file2 >> password;
 
-            User* u = new User(username);
-            u->reloggingUser(file2, catalog, tempID);
+            User* u = new User(username, password);
+            u->reloggingUser(file2, catalog);
             user.push_back(u);
         }
         //
@@ -386,10 +416,13 @@ void OnlineShop::RunSystem(){
         int managerSize;
         file3 >> managerSize;
         for (int i = 0; i < managerSize; i++){
-            int tempID;
             string username;
-            Manager* m = new Manager(username);
-            m->reloggingManager(file3, tempID);
+            string password;
+            file3 >> username;
+            file3 >> password;
+
+            Manager* m = new Manager(username, password);
+            m->reloggingManager(file3);
         }
         //
     }
@@ -415,6 +448,19 @@ void OnlineShop::RunSystem(){
             cout << "2) Signup as Manager" << endl;
             cin >> Check_2;
             system("clear");
+
+            if (Check_2 == 1){
+                string username, password;
+                cout << "Username: "; cin >> username;
+                cout << "Password: "; cin >> password;
+                user.push_back(new User(username, password));
+            }
+            else if (Check_2 == 2){
+                string username, password;
+                cout << "Username: "; cin >> username;
+                cout << "Password: "; cin >> password;
+                manager.push_back(new Manager(username, password));
+            }
         }
         else if (Check_1 == 2){
             int Check_2;
@@ -433,7 +479,13 @@ void OnlineShop::RunSystem(){
                 system("clear");
 
                 User* currentUser = user[Check_3 - 1];
-                bool LoggedIn = true;
+
+                string password;
+                bool LoggedIn = false;
+                cout << "Password: "; cin >> password;
+                if (password == currentUser->getPassword()){
+                    LoggedIn = true;
+                }
                 while (LoggedIn){
                     system("clear");
                     int Check_4;
@@ -447,14 +499,14 @@ void OnlineShop::RunSystem(){
                     cout << "[CATALOG]" << endl << endl;
                     if (Check_4 == 1){
                         catalog.categoryDisplay();
-                        catalog.normalDisplay();
+                        catalog.unfilteredDisplay();
                     }
                     else if (Check_4 == 2){
                         catalog.categoryDisplay();
                         cout << "Category: ";
                         string choosenCategory;
                         cin >> choosenCategory;
-                        catalog.searchDisplay(choosenCategory);
+                        catalog.filteredDisplay(choosenCategory);
                     }
                     else {
                         LoggedIn = false;
@@ -491,7 +543,66 @@ void OnlineShop::RunSystem(){
                 }
             }
             else if (Check_2 == 2){
+                int Check_3;
+                cout << "[SELECT MANAGER]" << endl;
+                for (int i = 0; i < manager.size(); i++){
+                    cout << manager[i]->getManagerID() << ") " << manager[i]->getUsername() << endl;
+                }
+                cin >> Check_3;
+                system("clear");
 
+                Manager* currentManager = manager[Check_3 - 1];
+
+                string password;
+                bool LoggedIn = false;
+                cout << "Password: "; cin >> password;
+                if (password == currentManager->getPassword()){
+                    LoggedIn = true;
+                }
+                while (LoggedIn){
+                    system("clear");
+                    int Check_4;
+                    catalog.categoryDisplay();
+                    catalog.unfilteredDisplay();
+                    cout << endl;
+                    cout << "[LOGGED IN AS: " << currentManager->getUsername() << "]" << endl << endl;
+                    cout << "0) Return Back" << endl;
+                    cout << "1) Add Product" << endl;
+                    cout << "2) Remove Product" << endl;
+                    cout << "3) Add Category" << endl;
+                    cout << "4) Remove Category" << endl;
+                    cin >> Check_4;
+                    system("clear");
+
+                    if (Check_4 == 1) {
+                        int prodPrice, prodQuantity;
+                        string prodName, prodCateory;
+                        cout << "Name: "; cin >> prodName;
+                        cout << "Category: "; cin >> prodCateory;
+                        cout << "Price: "; cin >> prodPrice;
+                        cout << "Quantity: "; cin >> prodQuantity;
+                        Product* P = new Product(prodName, prodCateory, prodPrice, prodQuantity);
+                        catalog += *P;
+                    }
+                    else if (Check_4 == 2){
+                        int prodID;
+                        cout << "ID: "; cin >> prodID;
+                        catalog -= prodID;
+                    }
+                    else if (Check_4 == 3){
+                        string Cate;
+                        cout << "Category: "; cin >> Cate;
+                        catalog += Cate;
+                    }
+                    else if (Check_4 == 4){
+                        string Cate;
+                        cout << "Category: "; cin >> Cate;
+                        catalog -= Cate;
+                    }
+                    else {
+                        LoggedIn = false;
+                    }
+                }
             }
         }
         else{

@@ -10,16 +10,17 @@ class Catalog;
 // General Class, Used by: [Cart, Catalog]
 class Product{
 private:
+    static int productCount;
+    int productID;
     string name;
     string category;
-    int productID;
     int price;
     int quantity;
 public:
-    Product(int pProductID, string pName, int pPrice, int pQuantity);
+    Product(string pName, string pCategory, int pPrice, int pQuantity);
+    int getProductID();
     string getName();
     string getCategory();
-    int getProductID();
     int getPrice();
     int getQuantity();
     Product& operator--();
@@ -31,8 +32,11 @@ public:
 class Person{
 protected:
     string username;
+    string password;
 public:
-    Person(string uName);
+    Person(string uName, string uPassword);
+    string getUsername();
+    string getPassword();
     virtual void display() = 0;
     virtual ~Person();
 };
@@ -62,14 +66,13 @@ private:
     int userID;
     Cart cart;
 public:
-    User(string uName);
+    User(string uName, string uPassword);
     void display() override;
     int getUserID();
-    string getUsername();
     void addProduct(Product& P, int pQuantity);
     void removeProduct(Product& P, int prodID);
     void loggingUser(fstream& _file);
-    void reloggingUser(fstream& _file, Catalog& Catalog, int ID);
+    void reloggingUser(fstream& _file, Catalog& Catalog);
     void storeCart();
     void checkout();
     ~User() override;
@@ -86,13 +89,15 @@ public:
     Catalog();
     void loggingCatalog(fstream& _file);
     Product* searchProduct(int proID);
+    int searchProductIndex(int _proID);
     void reloggingCatalog(fstream& _file);
     void categoryDisplay();
-    void normalDisplay();
-    void searchDisplay(string Categor);
-    void Save();
+    void unfilteredDisplay();
+    void filteredDisplay(string Categor);
     Catalog& operator+=(string C);
     Catalog& operator+=(Product& P);
+    Catalog& operator-=(string C);
+    Catalog& operator-=(int _prodID);
     ~Catalog();
 };
 
@@ -103,11 +108,11 @@ private:
     static int managerCount;
     int managerID;
 public:
-    Manager(string uName);
-    void loggingManager(fstream& _file);
-    void reloggingManager(fstream& _file, int ID);
-    void display() override;
+    Manager(string uName, string uPassword);
     int getManagerID();
+    void loggingManager(fstream& _file);
+    void reloggingManager(fstream& _file);
+    void display() override;
     ~Manager() override;
 };
 
