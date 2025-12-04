@@ -59,19 +59,22 @@ Person::~Person(){}
 //
 Cart::Cart() {}
 
-Cart& Cart::addProduct(Product& P, int pQuantity){
+Cart& Cart::addProduct_helper(Product& P, int pQuantity){
     product.push_back(&P);
     productQuantity.push_back(pQuantity);
     return *this;
 }
 
-void Cart::removeProduct(Product& P, int _prodID){
-    int index;
+void Cart::removeProduct_helper(Product& P, int _prodID){
+    int index = -1;
     for (int i = 0; i < product.size(); i++){
         if(product[i]->getProductID() == _prodID){
             index = i;
+            break;
         }
     }
+
+    if (index == -1) return;  
     product.erase(product.begin() + index);
     productQuantity.erase(productQuantity.begin() + index);
 }
@@ -115,6 +118,31 @@ void Cart::reloggingCart(fstream& _file, Catalog& Catalog){
     }
 }
 
+void Cart::viewCart_helper(){
+    cout << "Name|";
+    cout << "ProductID|";
+    cout << "Price|";
+    cout << "Quantity|";
+    cout << "Amount|";
+    cout << "\n";
+
+    for (int i = 0; i < product.size(); i++){
+        cout << product[i]->getName() << "|";
+        cout << product[i]->getProductID() << "|";
+        cout << product[i]->getPrice() << "|";
+        cout << productQuantity[i] << "|";
+        cout << productQuantity[i]*product[i]->getPrice() << "|";
+        cout << "\n";
+    }
+
+    cout << "\nTotal Cost: ";
+    int sum = 0;
+    for (int i = 0; i < product.size(); i++){
+        sum += productQuantity[i]*product[i]->getPrice();
+    }
+    cout << sum;
+}
+
 void Cart::checkout_helper(fstream& _file){
     _file << "Name|";
     _file << "ProductID|";
@@ -153,9 +181,8 @@ User::User(string uName, string uPassword): Person(uName, uPassword) {
     userID = userCount;
 }
 
-
-void User::display() {
-    cout << "               " << username << endl;
+void User::display(){
+    cout << "User: " << username;
 }
 
 int User::getUserID(){
@@ -163,11 +190,11 @@ int User::getUserID(){
 }
 
 void User::addProduct(Product& P, int pQuantity){
-    cart.addProduct(P, pQuantity);
+    cart.addProduct_helper(P, pQuantity);
 }
 
 void User::removeProduct(Product& P, int prodID){
-    cart.removeProduct(P, prodID);
+    cart.removeProduct_helper(P, prodID);
 }
 
 void User::loggingUser(fstream& _file){
@@ -179,6 +206,10 @@ void User::loggingUser(fstream& _file){
 
 void User::reloggingUser(fstream& _file, Catalog& Catalog){
     cart.reloggingCart(_file, Catalog);
+}
+
+void User::viewCart(){
+    cart.viewCart_helper();
 }
 
 void User::checkout(){
@@ -219,7 +250,7 @@ void Catalog::loggingCatalog(fstream& _file){
 }
 
 void Catalog::reloggingCatalog(fstream& _file){
-
+    // Relogging Category
     int categorySize;
     string cate;
     _file >> categorySize;
@@ -228,6 +259,8 @@ void Catalog::reloggingCatalog(fstream& _file){
         category.push_back(cate);
     }
 
+
+    // Relogging Product
     int productSize;
     _file >> productSize;
 
@@ -271,7 +304,7 @@ void Catalog::categoryDisplay(){
 void Catalog::unfilteredDisplay(){
     cout << "Products: " << endl;
     for (int i = 0; i < product.size(); i++){
-        cout << product[i]->getProductID() << ". ";
+        cout << "[" << product[i]->getProductID() << "] ";
         cout << product[i]->getName() << ", ";
         cout << product[i]->getPrice() << ", ";
         cout << product[i]->getQuantity() << ", ";
@@ -283,10 +316,11 @@ void Catalog::unfilteredDisplay(){
 void Catalog::filteredDisplay(string categor){
     for (int i = 0; i < product.size(); i++){
         if (product[i]->getCategory() == categor){
-            cout << product[i]->getProductID() << ". ";
+            cout << "[" << product[i]->getProductID() << "] ";
             cout << product[i]->getName() << ", ";
             cout << product[i]->getPrice() << ", ";
             cout << product[i]->getQuantity() << ", ";
+            cout << "\n";
         }
     }
     cout << endl;
@@ -311,8 +345,11 @@ Catalog& Catalog::operator-=(string C){
     return *this;
 }
 Catalog& Catalog::operator-=(int _prodID){
-    product.erase(product.begin() + this->searchProductIndex(_prodID));
-    return *this;
+    int index = searchProductIndex(_prodID);
+    if (index >= 0){
+        product.erase(product.begin() + index);
+    }
+    return *this; 
 }
 
 Catalog::~Catalog(){
@@ -331,12 +368,12 @@ Manager::Manager(string uName, string uPassword): Person(uName, uPassword) {
 }
 
 void Manager::display(){
-    cout << "              " << username << endl;
+    cout << "Manager: " << username << endl;
 }
 
 void Manager::loggingManager(fstream& _file){
-    _file << managerID << " ";
     _file << username << " ";
+    _file << password << " ";
     _file << "\n";
 }
 
@@ -423,6 +460,7 @@ void OnlineShop::RunSystem(){
 
             Manager* m = new Manager(username, password);
             m->reloggingManager(file3);
+            manager.push_back(m);
         }
         //
     }
@@ -478,6 +516,10 @@ void OnlineShop::RunSystem(){
                 cin >> Check_3;
                 system("clear");
 
+                if (Check_3 < 1 || Check_3 > user.size()) {
+                    cout << "Invalid selection\n";
+                    return;
+                }
                 User* currentUser = user[Check_3 - 1];
 
                 string password;
@@ -486,43 +528,64 @@ void OnlineShop::RunSystem(){
                 if (password == currentUser->getPassword()){
                     LoggedIn = true;
                 }
-                while (LoggedIn){
-                    system("clear");
-                    int Check_4;
-                    cout << "[LOGGED IN AS: " << currentUser->getUsername() << "]" << endl << endl;
-                    cout << "0) Return Back" << endl;
-                    cout << "1) Unfiltered Products" << endl;
-                    cout << "2) Filtered Products" << endl;
-                    cin >> Check_4;
-                    system("clear");
 
+                int Check_4 = 6;
+                while (LoggedIn){
+                    if (Check_4 != 1){
+                        system("clear");
+                        cout << "[CATALOG]" << endl;
+                        catalog.categoryDisplay();
+                        catalog.unfilteredDisplay();
+                        cout << endl;
+
+                        cout << "[LOGGED IN AS: " << currentUser->getUsername() << "]" << endl;
+                        cout << "0) Log Out" << endl;
+                        cout << "1) Search by Category" << endl << endl;
+
+                        cout << "[CART]" << endl;
+                        cout << "2) View Cart" << endl;
+                        cout << "3) Add Item" << endl;
+                        cout << "4) Remove Item" << endl;
+                        cout << "5) Checkout" << endl;
+                        cin >> Check_4;
+                        system("clear");
+                    }
+                    else {
+                        cout << "[LOGGED IN AS: " << currentUser->getUsername() << "]" << endl << endl;
+                        cout << "0) Log Out" << endl;
+                        cout << "1) No Search Filter" << endl << endl;
+
+                        cout << "[CART]" << endl;
+                        cout << "2) View Cart" << endl;
+                        cout << "3) Add Item" << endl;
+                        cout << "4) Remove Item" << endl;
+                        cout << "5) Checkout" << endl;
+                        cin >> Check_4;
+                        system("clear");
+
+                        if (Check_4 == 1){
+                            Check_4 = 6;
+                        }
+                    }
+
+                    int ProdID, Quantity;
                     cout << "[CATALOG]" << endl << endl;
                     if (Check_4 == 1){
                         catalog.categoryDisplay();
-                        catalog.unfilteredDisplay();
-                    }
-                    else if (Check_4 == 2){
-                        catalog.categoryDisplay();
-                        cout << "Category: ";
+                        cout << "Search: ";
                         string choosenCategory;
                         cin >> choosenCategory;
                         catalog.filteredDisplay(choosenCategory);
                     }
-                    else {
-                        LoggedIn = false;
-                        break;
+                    else if (Check_4 == 2){
+                        system("clear");
+                        int fluke;
+                        cout << "[CART]" << endl;
+                        currentUser->viewCart();
+                        cout << endl;
+                        cin >> fluke;
                     }
-
-
-                    int Check_5;
-                    cout << "[CART]" << endl << endl;
-                    cout << "1) Add Item to Cart" << endl;
-                    cout << "2) Remove Item from Cart" << endl;
-                    cout << "3) Checkout" << endl;
-                    cin >> Check_5;
-
-                    int ProdID, Quantity;
-                    if (Check_5 == 1){
+                    else if (Check_4 == 3){
                         cout << "ProductID: ";
                         cin >> ProdID;
                         cout << "Quantity: ";
@@ -530,16 +593,25 @@ void OnlineShop::RunSystem(){
                         Product* Prod = catalog.searchProduct(ProdID);
                         currentUser->addProduct(*Prod, Quantity);
                     }
-                    else if (Check_5 == 2){
+                    else if (Check_4 == 4){
                         cout << "ProductID: ";
                         cin >> ProdID;
                         Product* Prod = catalog.searchProduct(ProdID);
                         currentUser->removeProduct(*Prod, ProdID);
                     }
-                    else if (Check_5 == 3){
+                    else if (Check_4 == 5){
                         currentUser->checkout();
                         return;
                     }
+                    else if (Check_4 == 6){
+                        // Just for Program purposes
+                    }
+                    else {
+                        LoggedIn = false;
+                        break;
+                    }
+
+
                 }
             }
             else if (Check_2 == 2){
@@ -551,6 +623,10 @@ void OnlineShop::RunSystem(){
                 cin >> Check_3;
                 system("clear");
 
+                if (Check_3 < 1 || Check_3 > manager.size()) {
+                    cout << "Invalid selection\n";
+                    return;
+                }
                 Manager* currentManager = manager[Check_3 - 1];
 
                 string password;
@@ -562,11 +638,13 @@ void OnlineShop::RunSystem(){
                 while (LoggedIn){
                     system("clear");
                     int Check_4;
+
+                    cout << "[CATALOG]" << endl;
                     catalog.categoryDisplay();
                     catalog.unfilteredDisplay();
                     cout << endl;
-                    cout << "[LOGGED IN AS: " << currentManager->getUsername() << "]" << endl << endl;
-                    cout << "0) Return Back" << endl;
+                    cout << "[LOGGED IN AS: " << currentManager->getUsername() << "]" << endl;
+                    cout << "0) Log Out" << endl;
                     cout << "1) Add Product" << endl;
                     cout << "2) Remove Product" << endl;
                     cout << "3) Add Category" << endl;

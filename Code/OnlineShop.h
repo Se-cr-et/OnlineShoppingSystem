@@ -23,6 +23,7 @@ public:
     string getCategory();
     int getPrice();
     int getQuantity();
+
     Product& operator--();
     ~Product();
 };
@@ -49,11 +50,18 @@ private:
     vector<Product*> product;
 public:
     Cart();
-    Cart& addProduct(Product& P, int pQuantity);
-    void removeProduct(Product& P, int _prodID);
+    // Deals with Products in Cart
     Product* searchProduct(int _prodID);
+      // Also helper methods
+    Cart& addProduct_helper(Product& P, int pQuantity);
+    void removeProduct_helper(Product& P, int _prodID);
+
+    // Data Persistence
     void loggingCart(fstream& _file);
     void reloggingCart(fstream& _file, Catalog& Catalog);
+
+    // Helper Methods for User Class
+    void viewCart_helper();
     void checkout_helper(fstream& _file);
     ~Cart();
 };
@@ -69,11 +77,17 @@ public:
     User(string uName, string uPassword);
     void display() override;
     int getUserID();
+
+    // Deals with Products in Cart
     void addProduct(Product& P, int pQuantity);
     void removeProduct(Product& P, int prodID);
+
+    // Data Persistence
     void loggingUser(fstream& _file);
     void reloggingUser(fstream& _file, Catalog& Catalog);
-    void storeCart();
+
+    // Cart Terminal View and Receipt Creation
+    void viewCart();
     void checkout();
     ~User() override;
 };
@@ -87,16 +101,26 @@ private:
     vector<Product*> product;
 public:
     Catalog();
-    void loggingCatalog(fstream& _file);
+
+    // Product Search
     Product* searchProduct(int proID);
     int searchProductIndex(int _proID);
-    void reloggingCatalog(fstream& _file);
+
+    // Menu Display Utilities
     void categoryDisplay();
     void unfilteredDisplay();
     void filteredDisplay(string Categor);
+
+    // Data Persistence
+    void loggingCatalog(fstream& _file);
+    void reloggingCatalog(fstream& _file);
+
+    // Category Operations
     Catalog& operator+=(string C);
-    Catalog& operator+=(Product& P);
     Catalog& operator-=(string C);
+
+    // Product Operations
+    Catalog& operator+=(Product& P);
     Catalog& operator-=(int _prodID);
     ~Catalog();
 };
@@ -110,9 +134,11 @@ private:
 public:
     Manager(string uName, string uPassword);
     int getManagerID();
+    void display() override;
+
+    // Data Persistence
     void loggingManager(fstream& _file);
     void reloggingManager(fstream& _file);
-    void display() override;
     ~Manager() override;
 };
 
@@ -130,10 +156,14 @@ private:
     OnlineShop();
 public:
     static OnlineShop* getInstance();
+
+    // System Operations
     void addCategory(string C);
     void addProduct(Product& P);
     void addUser(User* U);
     void addManager(Manager* M);
+
+    // System Booting
     void RunSystem();
     void CloseSystem();
     ~OnlineShop();
